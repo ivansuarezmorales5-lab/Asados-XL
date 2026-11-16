@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASADOS XL</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111827">
+<link rel="apple-touch-icon" href="icon.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--main:#f97316;--dark:#111827;--muted:#6b7280}
+*{box-sizing:border-box}
+body{margin:0;background:#f3f4f6;color:#111827;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{cursor:pointer}
+.topbar{background:linear-gradient(120deg,#111827,#292524);color:white}
+.brand-mark{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:var(--main);font-size:21px;box-shadow:0 5px 16px #f9731644}
+.section-kicker{font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#9ca3af}
+.mesa-strip{scrollbar-width:none}
+.mesa-strip::-webkit-scrollbar{display:none}
+.mesa-btn{flex:0 0 auto;min-width:48px;padding:10px 13px;border:1px solid #4b5563;border-radius:12px;background:#374151;color:#e5e7eb;font-weight:750;font-size:13px;position:relative;transition:.15s}
+.mesa-btn.active{background:var(--main);border-color:var(--main);color:white;box-shadow:0 5px 14px #f9731644}
+.mesa-btn.ocupada:not(.active)::after{content:"";position:absolute;right:5px;top:5px;width:7px;height:7px;border-radius:50%;background:#facc15}
+.panel{background:white;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 5px 20px #11182708}
+.product-card{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:14px;box-shadow:0 3px 12px #11182708;display:flex;flex-direction:column;min-height:140px}
+.product-name{font-size:14px;line-height:1.25;font-weight:800;color:#1f2937;min-height:35px}
+.product-price{color:#ea580c;font-size:15px;font-weight:850;margin-top:5px}
+.qty-btn{width:34px;height:34px;border-radius:11px;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.qty-minus{background:#f3f4f6;color:#374151}
+.qty-plus{background:var(--main);color:white;box-shadow:0 4px 10px #f9731633}
+.qty-value{min-width:22px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+.order-line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px}
+.order-line:last-child{border-bottom:0}
+.action-btn{border-radius:13px;padding:12px 14px;font-size:13px;font-weight:800;transition:.15s}
+.action-btn:active{transform:scale(.98)}
+.footer-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px #11182712}
+.modal-card{width:min(340px,calc(100vw - 32px));background:white;border-radius:18px;padding:20px;box-shadow:0 20px 60px #0005}
+@media(min-width:640px){.product-card{min-height:150px;padding:16px}.product-name{font-size:15px}}
+</style>
+</head>
+<body class="pb-52">
+<header class="topbar px-4 pt-5 pb-4">
+  <div class="max-w-xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="brand-mark">🔥</div>
+      <div>
+        <div class="text-lg font-black tracking-wide">ASADOS XL</div>
+        <div class="text-xs text-gray-300">Panel de pedidos</div>
+      </div>
+    </div>
+    <div class="text-[10px] font-bold tracking-widest text-orange-300 border border-orange-400/30 rounded-full px-3 py-2">COMANDAS</div>
+  </div>
+</header>
+
+<section class="bg-gray-900 px-3 pt-3 pb-4">
+  <div class="max-w-xl mx-auto">
+    <div class="section-kicker text-gray-400 mb-2">Seleccionar mesa</div>
+    <div id="lista-mesas" class="mesa-strip flex gap-2 overflow-x-auto"></div>
+  </div>
+</section>
+
+<main class="px-3 py-4 max-w-xl mx-auto space-y-4">
+  <section class="panel p-4">
+    <div class="flex items-center justify-between gap-3 mb-2">
+      <div>
+        <div class="section-kicker">Pedido actual</div>
+        <div class="text-xl font-black">Mesa <span id="m-tit">1</span></div>
+      </div>
+      <span class="text-xs font-bold text-orange-600 bg-orange-50 rounded-full px-3 py-2">ASADOS XL</span>
+    </div>
+    <div id="lista-firme" class="mt-2">
+      <div class="text-sm text-gray-400 py-3 text-center">Aún no hay productos cargados en esta mesa.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="flex items-end justify-between mb-3 px-1">
+      <div>
+        <div class="section-kicker">Menú</div>
+        <h2 class="text-lg font-black">Productos disponibles</h2>
+      </div>
+      <span id="contador-menu" class="text-xs font-semibold text-gray-400"></span>
+    </div>
+    <div id="menu" class="grid grid-cols-2 gap-3"></div>
+  </section>
+</main>
+
+<footer class="footer-bar fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 pt-3 z-20">
+  <div class="max-w-xl mx-auto">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-[11px] font-bold uppercase tracking-widest text-gray-400">Total de la mesa</div>
+        <div id="total-txt" class="text-2xl font-black text-gray-900">$0</div>
+      </div>
+      <div class="text-right text-[11px] text-gray-400">Confirma los productos<br>antes de cerrar la mesa</div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mt-3">
+      <button onclick="cargarAMesa()" class="action-btn bg-emerald-600 text-white">＋ Cargar pedido</button>
+      <button onclick="verFactura()" class="action-btn bg-orange-500 text-white">Ver ticket</button>
+    </div>
+    <button onclick="finalizar()" class="action-btn w-full bg-gray-900 text-white mt-2">Cerrar mesa</button>
+  </div>
+</footer>
+
+<div id="modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+  <div class="modal-card">
+    <div class="text-center mb-3">
+      <div class="text-lg font-black tracking-widest">ASADOS XL 🔥</div>
+      <div class="text-xs text-gray-500">Comprobante de pedido · Mesa <span id="ticket-mesa"></span></div>
+      <div class="text-[11px] text-gray-400 mt-1" id="fecha"></div>
+    </div>
+    <div class="border-t border-dashed border-gray-300 my-3"></div>
+    <div id="ticket-items" class="text-sm space-y-2"></div>
+    <div class="border-t border-dashed border-gray-300 my-3"></div>
+    <div id="ticket-totales" class="text-sm space-y-1"></div>
+    <div class="border-t border-dashed border-gray-300 my-3"></div>
+    <div class="text-right text-xl font-black" id="ticket-total"></div>
+    <button onclick="cerrarModal()" class="w-full mt-4 bg-gray-900 text-white py-3 rounded-xl font-bold">VOLVER</button>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+const productos = [
+  { id:1, n:"Cerdo talla L", p:22000 },
+  { id:2, n:"Costichip", p:27000 },
+  { id:3, n:"Chorisam", p:16000 },
+  { id:4, n:"XL", p:29000 },
+  { id:5, n:"Chicharrón", p:24000 },
+  { id:6, n:"Punta de Anca", p:32000 },
+  { id:7, n:"Churrasco", p:32000 },
+  { id:8, n:"Tomahawk", p:35000 },
+  { id:9, n:"Chocolate", p:6000 },
+  { id:10, n:"Chocolate con Queso", p:8000 },
+  { id:11, n:"Gaseosa", p:5000 },
+  { id:12, n:"Res talla L", p:22000 },
+  { id:13, n:"Arepa/ Piña", p:3000 },
+  { id:14, n:"Adición Extra", p:2000 },
+  { id:15, n:"Agua / Mr.Tea", p:4000 },
+  { id:16, n:"Chorizo Crudo", p:10000 },
+  { id:17, n:"Res XL", p:32000 },
+  { id:18, n:"Costillas 3XL", p:45000 },
+  { id:19, n:"Costillas L", p:32000 }
+];
+
+let mesas = {};
+let temp = {};
+let mesaActual = 1;
+const formato = n => "$" + Number(n || 0).toLocaleString("es-CO");
+
+function prepararTemporales(){
+  for(let i=1;i<=17;i++){
+    if(!temp[i]) temp[i] = {};
+    productos.forEach(p=>{
+      if(typeof temp[i][p.id] !== "number") temp[i][p.id] = 0;
+    });
+  }
+}
+function guardar(){
+  localStorage.setItem("mesas", JSON.stringify(mesas));
+}
+function cargar(){
+  const data = localStorage.getItem("mesas");
+  if(!data){ mesas = {}; return; }
+  try{
+    const parsed = JSON.parse(data);
+    mesas = parsed && typeof parsed === "object" ? parsed : {};
+  }catch(e){
+    mesas = {};
+    localStorage.removeItem("mesas");
+  }
+}
+function init(){
+  cargar();
+  prepararTemporales();
+  for(let i=1;i<=17;i++){
+    if(!Array.isArray(mesas[i])) mesas[i] = [];
+  }
+  const cont = document.getElementById("lista-mesas");
+  cont.innerHTML = "";
+  for(let i=1;i<=17;i++){
+    cont.innerHTML += `<button onclick="cambiarMesa(${i})" id="m${i}" class="mesa-btn">M${i}</button>`;
+  }
+  document.getElementById("contador-menu").textContent = productos.length + " productos";
+  renderMenu();
+  actualizarUI();
+}
+function cambiarMesa(n){
+  mesaActual = n;
+  actualizarUI();
+  renderMenu();
+}
+function qty(id,v){
+  const actual = temp[mesaActual][id] || 0;
+  if(actual + v >= 0){
+    temp[mesaActual][id] = actual + v;
+    renderMenu();
+    total();
+  }
+}
+function cargarAMesa(){
+  const data = mesas[mesaActual];
+  let agregados = 0;
+  productos.forEach(p=>{
+    const q = temp[mesaActual][p.id] || 0;
+    if(q > 0){
+      const ex = data.find(i=>i.id===p.id);
+      if(ex){ ex.cant += q; }
+      else{ data.push({id:p.id,n:p.n,cant:q,p:p.p}); }
+      temp[mesaActual][p.id] = 0;
+      agregados += q;
+    }
+  });
+  if(!agregados){
+    alert("Selecciona al menos un producto antes de cargar el pedido.");
+    return;
+  }
+  guardar();
+  renderMenu();
+  renderLista();
+  total();
+  actualizarIndicadores();
+}
+function eliminar(i){
+  mesas[mesaActual].splice(i,1);
+  guardar();
+  renderLista();
+  total();
+  actualizarIndicadores();
+}
+function renderMenu(){
+  const m = document.getElementById("menu");
+  m.innerHTML = "";
+  productos.forEach(p=>{
+    const q = temp[mesaActual][p.id] || 0;
+    m.innerHTML += `
+      <article class="product-card">
+        <div class="product-name">${p.n}</div>
+        <div class="product-price">${formato(p.p)}</div>
+        <div class="flex items-center justify-between mt-auto pt-3">
+          <button aria-label="Quitar ${p.n}" class="qty-btn qty-minus" onclick="qty(${p.id},-1)">−</button>
+          <span class="qty-value">${q}</span>
+          <button aria-label="Agregar ${p.n}" class="qty-btn qty-plus" onclick="qty(${p.id},1)">+</button>
+        </div>
+      </article>`;
+  });
+}
+function renderLista(){
+  const l = document.getElementById("lista-firme");
+  l.innerHTML = "";
+  const items = mesas[mesaActual] || [];
+  if(items.length === 0){
+    l.innerHTML = `<div class="text-sm text-gray-400 py-3 text-center">Aún no hay productos cargados en esta mesa.</div>`;
+    return;
+  }
+  items.forEach((i,idx)=>{
+    l.innerHTML += `
+      <div class="order-line">
+        <div class="min-w-0">
+          <div class="font-bold text-gray-800">${i.cant} × ${i.n}</div>
+          <div class="text-[11px] text-gray-400">${formato(i.p)} c/u</div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <span class="font-bold">${formato(i.cant*i.p)}</span>
+          <button onclick="eliminar(${idx})" aria-label="Eliminar ${i.n}" class="text-red-500 font-bold px-1">✕</button>
+        </div>
+      </div>`;
+  });
+}
+function total(){
+  let sub = 0;
+  (mesas[mesaActual] || []).forEach(i=>{ sub += i.cant * i.p; });
+  productos.forEach(p=>{ sub += (temp[mesaActual][p.id] || 0) * p.p; });
+  document.getElementById("total-txt").textContent = formato(sub);
+}
+function actualizarIndicadores(){
+  for(let i=1;i<=17;i++){
+    const btn = document.getElementById("m"+i);
+    if(!btn) continue;
+    btn.classList.toggle("ocupada", (mesas[i] || []).length > 0);
+  }
+}
+function actualizarUI(){
+  document.getElementById("m-tit").textContent = mesaActual;
+  document.querySelectorAll(".mesa-btn").forEach(b=>b.classList.remove("active"));
+  const actual = document.getElementById("m"+mesaActual);
+  if(actual) actual.classList.add("active");
+  renderLista();
+  total();
+  actualizarIndicadores();
+}
+function verFactura(){
+  const data = mesas[mesaActual];
+  if(!data || data.length === 0) return alert("Mesa vacía. Primero carga el pedido.");
+  let sub = 0;
+  const fecha = new Date();
+  document.getElementById("ticket-mesa").textContent = mesaActual;
+  document.getElementById("fecha").textContent = fecha.toLocaleDateString("es-CO") + " · " + fecha.toLocaleTimeString("es-CO");
+  let itemsHTML = "";
+  data.forEach(i=>{
+    const itemTotal = i.cant * i.p;
+    sub += itemTotal;
+    itemsHTML += `<div class="flex justify-between gap-3"><span>${i.cant} × ${i.n}</span><span class="font-semibold">${formato(itemTotal)}</span></div>`;
+  });
+  document.getElementById("ticket-items").innerHTML = itemsHTML;
+  const prop = Math.round(sub * 0.1);
+  const totalFinal = sub + prop;
+  document.getElementById("ticket-totales").innerHTML = `
+    <div class="flex justify-between"><span>Subtotal:</span><span>${formato(sub)}</span></div>
+    <div class="flex justify-between text-gray-500"><span>Servicio (10%):</span><span>${formato(prop)}</span></div>`;
+  document.getElementById("ticket-total").textContent = "TOTAL: " + formato(totalFinal);
+  document.getElementById("modal").classList.remove("hidden");
+}
+function cerrarModal(){
+  document.getElementById("modal").classList.add("hidden");
+}
+function finalizar(){
+  if(!confirm("¿Seguro que deseas cerrar la mesa " + mesaActual + " y borrar su pedido?")) return;
+  mesas[mesaActual] = [];
+  productos.forEach(p=>{ temp[mesaActual][p.id] = 0; });
+  guardar();
+  renderLista();
+  renderMenu();
+  total();
+  actualizarIndicadores();
+}
+window.onload = init;
+</script>
+</body>
+</html>
